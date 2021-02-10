@@ -17,22 +17,24 @@ int main(int argc, char *argv[]) {
 
     char * arg;
     while ((arg = *argv) != NULL) {
-      // Flags
+      // Identify flags
       if (arg[0] == '-') {
-        if (arg[1] == 'l') {
-          printf("Long format\n");
+        switch (arg[1]) {
+        case 'l':
           FLAG_LONG_FORMAT = true;
-        }
-        if (arg[1] == 'a') {
-          printf("All flag\n");
+          break;
+        case 'a':
           FLAG_ALL = true;
-        }
-        if (arg[1] == 'S') {
-          printf("Sort by size flag\n");
+          break;
+        case 'S':
           FLAG_SORT_BY_SIZE = true;
+          break;
+        default:
+          printf("ls: illegal option -- %c\n", arg[1]);
+          printf("usage: ls [-@ABCFGHLOPRSTUWabcdefghiklmnopqrstuwx1] [file ...]\n");
+          exit(1);
         }
 
-        printf("Flags: %s\n", arg);
       } else {
         printf("Arg: %s\n", arg);
       }
