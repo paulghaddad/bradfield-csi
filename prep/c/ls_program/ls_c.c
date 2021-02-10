@@ -8,65 +8,75 @@
 #include <grp.h>
 #include <time.h>
 
+struct flag_opts {
+  bool long_format;
+  bool all_files;
+};
+
+void printDirectoryContents(char* path, struct flag_opts *options);
+
 int main(int argc, char *argv[]) {
+  // default path is current working directory
   char* path = ".";
 
-  bool FLAG_LONG_FORMAT = false;
-  bool FLAG_ALL = false;
-  bool FLAG_SORT_BY_SIZE = false;
+  struct flag_opts ls_options = {false, false};
 
   if (argc > 1) {
     // skip first arg, the program name
     argv++;
 
-    char * arg;
-    while ((arg = *argv) != NULL) {
+    while (*argv != NULL) {
       // Identify flags
-      if (arg[0] == '-') {
-        switch (arg[1]) {
+      if (**argv == '-') {
+        switch ((*argv)[1]) {
         case 'l':
-          FLAG_LONG_FORMAT = true;
+          ls_options.long_format = true;
           break;
         case 'a':
-          FLAG_ALL = true;
-          break;
-        case 'S':
-          FLAG_SORT_BY_SIZE = true;
+          ls_options.all_files = true;
           break;
         default:
-          printf("ls: illegal option -- %c\n", arg[1]);
+          printf("ls: illegal option -- %c\n", (*argv)[1]);
           printf("usage: ls [-@ABCFGHLOPRSTUWabcdefghiklmnopqrstuwx1] [file ...]\n");
           exit(1);
         }
-      } else {
+      } else
         path = *argv;
-      }
 
       argv++;
     }
   }
 
+  printDirectoryContents(path, &ls_options);
+
+  return EXIT_SUCCESS;
+}
+
+void printDirectoryContents(char* path, struct flag_opts *flags) {
   DIR* directory = opendir(path);
   struct dirent *curdir;
 
   while ((curdir = readdir(directory)) != NULL) {
     struct stat file_stats;
-    lstat(curdir->d_name, &file_stats);
+    char* filename = curdir->d_name;
+    lstat(filename, &file_stats);
 
     // If -a flag not on, skip hidden files
-    if (curdir->d_name[0] == '.' && !FLAG_ALL)
+    if (filename[0] == '.' && flags->all_files)
       continue;
 
-    char* name;
+    char* formattedName;
 
     // if directory
     if (S_ISDIR(file_stats.st_mode))
-      name = strcat(curdir->d_name, "/");
+      formattedName = strcat(filename, "/");
     // if regular file
     else if (S_ISREG(file_stats.st_mode))
-      name = curdir->d_name;
+      formattedName = filename;
 
-    if (FLAG_ALL) {
+    // Long format
+    if (flags->long_format) {
+
       // File permissions
       char permission_buf[20];
       char dir = (S_ISDIR(file_stats.st_mode)) ? 'd' : '-';
@@ -103,16 +113,10 @@ int main(int argc, char *argv[]) {
       timestamp = *localtime(&file_stats.st_mtime);
       strftime(ts_buffer, 80, "%m %d %H:%M", &timestamp);
 
-      printf("%s %d %s %s %d %s %s\n", permission_buf, hardlinks, pwd->pw_name, grp->gr_name, file_size, ts_buffer, curdir->d_name);
+      printf("%s %d %s %s %d %s %s\n", permission_buf, hardlinks, pwd->pw_name, grp->gr_name, file_size, ts_buffer, formattedName);
     } else
-      printf("%s\n", curdir->d_name);
+      printf("%s\n", formattedName);
   }
 
   closedir(directory);
-
-  return EXIT_SUCCESS;
 }
-
-// Supported flags:
-// -S: Sort by size
-// Add error checking
