@@ -34,10 +34,10 @@ int main(int argc, char *argv[]) {
           printf("usage: ls [-@ABCFGHLOPRSTUWabcdefghiklmnopqrstuwx1] [file ...]\n");
           exit(1);
         }
-
       } else {
-        printf("Arg: %s\n", arg);
+        path = *argv;
       }
+
       argv++;
     }
   }
@@ -48,6 +48,10 @@ int main(int argc, char *argv[]) {
   while ((curdir = readdir(directory)) != NULL) {
     struct stat file_stats;
     lstat(curdir->d_name, &file_stats);
+
+    // If -a flag not on, skip hidden files
+    if (curdir->d_name[0] == '.' && !FLAG_ALL)
+      continue;
 
     // if directory
     if ((file_stats.st_mode & S_IFMT) == S_IFDIR)
@@ -63,7 +67,6 @@ int main(int argc, char *argv[]) {
 }
 
 // Supported flags:
-// -a: include files beginning with a dot
 // -l: long format
 // -S: Sort by size
 // Add error checking
