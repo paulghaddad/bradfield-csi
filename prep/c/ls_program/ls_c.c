@@ -67,6 +67,20 @@ int main(int argc, char *argv[]) {
       name = curdir->d_name;
 
     if (FLAG_ALL) {
+      // File permissions
+      char permission_buf[20];
+      char dir = (S_ISDIR(file_stats.st_mode)) ? 'd' : '-';
+      char owner_r = (file_stats.st_mode & S_IRUSR) ? 'r' : '-';
+      char owner_w = (file_stats.st_mode & S_IWUSR) ? 'w' : '-';
+      char owner_x = (file_stats.st_mode & S_IXUSR) ? 'x' : '-';
+      char group_r = (file_stats.st_mode & S_IRGRP) ? 'r' : '-';
+      char group_w = (file_stats.st_mode & S_IWGRP) ? 'w' : '-';
+      char group_x = (file_stats.st_mode & S_IXGRP) ? 'x' : '-';
+      char other_r = (file_stats.st_mode & S_IROTH) ? 'r' : '-';
+      char other_w = (file_stats.st_mode & S_IWOTH) ? 'w' : '-';
+      char other_x = (file_stats.st_mode & S_IXOTH) ? 'x' : '-';
+      sprintf(permission_buf, "%c%c%c%c%c%c%c%c%c%c", dir, owner_r, owner_w, owner_x, group_r, group_w, group_x, other_r, other_w, other_x);
+
       // number of hardlinks
       int hardlinks = file_stats.st_nlink;
 
@@ -86,11 +100,10 @@ int main(int argc, char *argv[]) {
       // last modified time
       char ts_buffer[80];
       struct tm timestamp;
-      /* time_t last_modified = file_stats.st_mtime; */
       timestamp = *localtime(&file_stats.st_mtime);
       strftime(ts_buffer, 80, "%m %d %H:%M", &timestamp);
 
-      printf("%d %s %s %d %s %s\n", hardlinks, pwd->pw_name, grp->gr_name, file_size, ts_buffer, curdir->d_name);
+      printf("%s %d %s %s %d %s %s\n", permission_buf, hardlinks, pwd->pw_name, grp->gr_name, file_size, ts_buffer, curdir->d_name);
     } else
       printf("%s\n", curdir->d_name);
   }
@@ -101,6 +114,5 @@ int main(int argc, char *argv[]) {
 }
 
 // Supported flags:
-// -l: long format
 // -S: Sort by size
 // Add error checking
