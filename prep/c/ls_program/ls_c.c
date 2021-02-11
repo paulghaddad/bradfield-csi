@@ -14,6 +14,7 @@ struct flag_opts {
 };
 
 void printDirectoryContents(char* path, struct flag_opts *options);
+char* formatFilename(char* filename, mode_t filemode);
 
 int main(int argc, char *argv[]) {
   // default path is current working directory
@@ -62,17 +63,10 @@ void printDirectoryContents(char* path, struct flag_opts *flags) {
     lstat(filename, &file_stats);
 
     // If -a flag not on, skip hidden files
-    if (filename[0] == '.' && flags->all_files)
+    if (filename[0] == '.' && !flags->all_files)
       continue;
 
-    char* formattedName;
-
-    // if directory
-    if (S_ISDIR(file_stats.st_mode))
-      formattedName = strcat(filename, "/");
-    // if regular file
-    else if (S_ISREG(file_stats.st_mode))
-      formattedName = filename;
+    char* formattedName = formatFilename(filename, file_stats.st_mode);
 
     // Long format
     if (flags->long_format) {
@@ -119,4 +113,13 @@ void printDirectoryContents(char* path, struct flag_opts *flags) {
   }
 
   closedir(directory);
+}
+
+char* formatFilename(char* filename, mode_t filemode) {
+    // if directory
+    if (S_ISDIR(filemode))
+      return strcat(filename, "/");
+    // if regular file
+    else
+      return filename;
 }
