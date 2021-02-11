@@ -15,6 +15,7 @@ struct flag_opts {
 
 void printDirectoryContents(char* path, struct flag_opts *options);
 char* formatFilename(char* filename, mode_t filemode);
+void printLongFormat(struct stat *file_stats, char* filename);
 
 int main(int argc, char *argv[]) {
   // default path is current working directory
@@ -70,44 +71,7 @@ void printDirectoryContents(char* path, struct flag_opts *flags) {
 
     // Long format
     if (flags->long_format) {
-
-      // File permissions
-      char permission_buf[20];
-      char dir = (S_ISDIR(file_stats.st_mode)) ? 'd' : '-';
-      char owner_r = (file_stats.st_mode & S_IRUSR) ? 'r' : '-';
-      char owner_w = (file_stats.st_mode & S_IWUSR) ? 'w' : '-';
-      char owner_x = (file_stats.st_mode & S_IXUSR) ? 'x' : '-';
-      char group_r = (file_stats.st_mode & S_IRGRP) ? 'r' : '-';
-      char group_w = (file_stats.st_mode & S_IWGRP) ? 'w' : '-';
-      char group_x = (file_stats.st_mode & S_IXGRP) ? 'x' : '-';
-      char other_r = (file_stats.st_mode & S_IROTH) ? 'r' : '-';
-      char other_w = (file_stats.st_mode & S_IWOTH) ? 'w' : '-';
-      char other_x = (file_stats.st_mode & S_IXOTH) ? 'x' : '-';
-      sprintf(permission_buf, "%c%c%c%c%c%c%c%c%c%c", dir, owner_r, owner_w, owner_x, group_r, group_w, group_x, other_r, other_w, other_x);
-
-      // number of hardlinks
-      int hardlinks = file_stats.st_nlink;
-
-      // owner name
-      int owner_id = file_stats.st_uid;
-      struct passwd *pwd;
-      pwd = getpwuid(owner_id);
-
-      // group name
-      int group_id = file_stats.st_gid;
-      struct group *grp;
-      grp = getgrgid(group_id);
-
-      // file size
-      int file_size = file_stats.st_size;
-
-      // last modified time
-      char ts_buffer[80];
-      struct tm timestamp;
-      timestamp = *localtime(&file_stats.st_mtime);
-      strftime(ts_buffer, 80, "%m %d %H:%M", &timestamp);
-
-      printf("%s %d %s %s %d %s %s\n", permission_buf, hardlinks, pwd->pw_name, grp->gr_name, file_size, ts_buffer, formattedName);
+      printLongFormat(&file_stats, formattedName);
     } else
       printf("%s\n", formattedName);
   }
@@ -122,4 +86,44 @@ char* formatFilename(char* filename, mode_t filemode) {
     // if regular file
     else
       return filename;
+}
+
+void printLongFormat(struct stat *file_stats, char* filename) {
+      // File permissions
+      char permission_buf[20];
+      char dir = (S_ISDIR(file_stats->st_mode)) ? 'd' : '-';
+      char owner_r = (file_stats->st_mode & S_IRUSR) ? 'r' : '-';
+      char owner_w = (file_stats->st_mode & S_IWUSR) ? 'w' : '-';
+      char owner_x = (file_stats->st_mode & S_IXUSR) ? 'x' : '-';
+      char group_r = (file_stats->st_mode & S_IRGRP) ? 'r' : '-';
+      char group_w = (file_stats->st_mode & S_IWGRP) ? 'w' : '-';
+      char group_x = (file_stats->st_mode & S_IXGRP) ? 'x' : '-';
+      char other_r = (file_stats->st_mode & S_IROTH) ? 'r' : '-';
+      char other_w = (file_stats->st_mode & S_IWOTH) ? 'w' : '-';
+      char other_x = (file_stats->st_mode & S_IXOTH) ? 'x' : '-';
+      sprintf(permission_buf, "%c%c%c%c%c%c%c%c%c%c", dir, owner_r, owner_w, owner_x, group_r, group_w, group_x, other_r, other_w, other_x);
+
+      // number of hardlinks
+      int hardlinks = file_stats->st_nlink;
+
+      // owner name
+      int owner_id = file_stats->st_uid;
+      struct passwd *pwd;
+      pwd = getpwuid(owner_id);
+
+      // group name
+      int group_id = file_stats->st_gid;
+      struct group *grp;
+      grp = getgrgid(group_id);
+
+      // file size
+      int file_size = file_stats->st_size;
+
+      // last modified time
+      char ts_buffer[80];
+      struct tm timestamp;
+      timestamp = *localtime(&file_stats->st_mtime);
+      strftime(ts_buffer, 80, "%m %d %H:%M", &timestamp);
+
+      printf("%s %d %s %s %d %s %s\n", permission_buf, hardlinks, pwd->pw_name, grp->gr_name, file_size, ts_buffer, filename);
 }
