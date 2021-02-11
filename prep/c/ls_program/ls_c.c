@@ -7,6 +7,7 @@
 #include <pwd.h>
 #include <grp.h>
 #include <time.h>
+#include <sys/types.h>
 
 struct flag_opts {
   bool long_format;
@@ -16,6 +17,28 @@ struct flag_opts {
 void printDirectoryContents(char* path, struct flag_opts *options);
 char* formatFilename(char* filename, mode_t filemode);
 void printLongFormat(struct stat *file_stats, char* filename);
+
+/* USAGE:
+ * 
+ * This program is a clone of Unix's ls program. Provided a path and option
+ * flags, it will print out information for the contents in the path directory.
+ *
+ * List non-hidden files in the current directory: ls_c
+ * List non-hidden files in the path: ls_c {path}
+ *
+ * Options:
+ * -a: List all files, including hidden ones
+ * Example: ls_c -a {path}
+ *
+ * -l: Print directory contents in long format
+ * Example: ls_c -l {path}
+ *
+ * Notes:
+ * Multiple flag options can be used provided they are separated by a
+ * space-delimited list.
+ * Example: ls_c -l -a {path}
+ *
+ * */
 
 int main(int argc, char *argv[]) {
   // default path is current working directory
@@ -61,7 +84,7 @@ void printDirectoryContents(char* path, struct flag_opts *flags) {
   while ((curdir = readdir(directory)) != NULL) {
     struct stat file_stats;
     char* filename = curdir->d_name;
-    lstat(filename, &file_stats);
+    stat(filename, &file_stats);
 
     // If -a flag not on, skip hidden files
     if (filename[0] == '.' && !flags->all_files)
@@ -101,7 +124,9 @@ void printLongFormat(struct stat *file_stats, char* filename) {
       char other_r = (file_stats->st_mode & S_IROTH) ? 'r' : '-';
       char other_w = (file_stats->st_mode & S_IWOTH) ? 'w' : '-';
       char other_x = (file_stats->st_mode & S_IXOTH) ? 'x' : '-';
-      sprintf(permission_buf, "%c%c%c%c%c%c%c%c%c%c", dir, owner_r, owner_w, owner_x, group_r, group_w, group_x, other_r, other_w, other_x);
+      sprintf(permission_buf, "%c%c%c%c%c%c%c%c%c%c",
+              dir, owner_r, owner_w, owner_x, group_r,
+              group_w, group_x, other_r, other_w, other_x);
 
       // number of hardlinks
       int hardlinks = file_stats->st_nlink;
@@ -125,5 +150,7 @@ void printLongFormat(struct stat *file_stats, char* filename) {
       timestamp = *localtime(&file_stats->st_mtime);
       strftime(ts_buffer, 80, "%m %d %H:%M", &timestamp);
 
-      printf("%s %d %s %s %d %s %s\n", permission_buf, hardlinks, pwd->pw_name, grp->gr_name, file_size, ts_buffer, filename);
+      printf("%s %d %s %s %d %s %s\n",
+          permission_buf, hardlinks, pwd->pw_name, grp->gr_name,
+          file_size, ts_buffer, filename);
 }
