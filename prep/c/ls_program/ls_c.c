@@ -65,8 +65,9 @@ int main(int argc, char *argv[]) {
           printf("usage: ls [-@ABCFGHLOPRSTUWabcdefghiklmnopqrstuwx1] [file ...]\n");
           exit(1);
         }
-      } else
+      } else {
         path = *argv;
+      }
 
       argv++;
     }
@@ -87,16 +88,18 @@ void printDirectoryContents(char* path, struct flag_opts *flags) {
     stat(filename, &file_stats);
 
     // If -a flag not on, skip hidden files
-    if (filename[0] == '.' && !flags->all_files)
+    if (filename[0] == '.' && !flags->all_files) {
       continue;
+    }
 
     char* formattedName = formatFilename(filename, file_stats.st_mode);
 
     // Long format
     if (flags->long_format) {
       printLongFormat(&file_stats, formattedName);
-    } else
+    } else {
       printf("%s\n", formattedName);
+    }
   }
 
   closedir(directory);
@@ -104,11 +107,12 @@ void printDirectoryContents(char* path, struct flag_opts *flags) {
 
 char* formatFilename(char* filename, mode_t filemode) {
     // if directory
-    if (S_ISDIR(filemode))
+    if (S_ISDIR(filemode)) {
       return strcat(filename, "/");
     // if regular file
-    else
+    } else {
       return filename;
+    }
 }
 
 void printLongFormat(struct stat *file_stats, char* filename) {
