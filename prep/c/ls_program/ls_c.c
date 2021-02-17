@@ -1,22 +1,10 @@
-#include <dirent.h>
-#include <sys/stat.h>
-#include <stdbool.h>
+#include "ls_c.h"
+
+#include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <pwd.h>
-#include <grp.h>
 #include <time.h>
-#include <sys/types.h>
-
-struct flag_opts {
-  bool long_format;
-  bool all_files;
-};
-
-void printDirectoryContents(char* path, struct flag_opts *options);
-char* formatFilename(char* filename, mode_t filemode);
-void printLongFormat(struct stat *file_stats, char* filename);
 
 /* USAGE:
  * 

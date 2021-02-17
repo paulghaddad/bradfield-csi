@@ -1,7 +1,18 @@
-CFLAGS = -g -Wall -std=c99 -c
+CC = cc
+CFLAGS = -Wall -std=c99 -c
+DEBUG = -g
+DEPS = ls_c.h
+OBJ = ls_c.o
 
-all: ls
 
+%.o: %.c $(DEPS)
+	$(CC) -c -o $@ $< $(CFLAGS)
 
-ls:
-	cc -g -Wall -std=c99 -o ls_c ls_c.c
+ls: ls_c.c
+	$(CC) $(CFLAGS) -o ls_c ls_c.c
+
+debug: ls_c.c
+	$(CC) $(DEBUG) $(CFLAGS) -o ls_c ls_c.c
+
+clean:
+	rm -rf ls_c ls_c.dSYM
