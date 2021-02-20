@@ -22,3 +22,8 @@ Notes:
  * Multiple flag options can be used provided they are separated by a space-delimited list.
  * Example: `ls_c -l -a {path}`
 ```
+
+## Things I need to fix
+
+* Passing in a single filename produces a segfault at `opendir`.
+* Add more robust error checking
