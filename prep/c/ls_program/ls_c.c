@@ -1,9 +1,12 @@
 #include "ls_c.h"
 
+#include <dirent.h>
+#include <grp.h>
 #include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
 #include <time.h>
 
 /* USAGE:
@@ -28,10 +31,14 @@
  *
  * */
 
+char* formatFilename(char* filename, mode_t filemode);
+void printLongFormat(struct stat *file_stats, char* filename);
+
 int main(int argc, char *argv[]) {
   // default path is current working directory
   char* path = ".";
 
+  // TODO: should I dynamically allocate this?
   struct flag_opts ls_options = {false, false};
 
   if (argc > 1) {
