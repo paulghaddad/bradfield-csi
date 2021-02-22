@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bufio"
+	"encoding/json"
 	"fmt"
 	"net/http"
 )
@@ -15,29 +15,36 @@ that matches a search term provided on the command line.
 */
 
 // Tasks:
-// Store each json object to a file
+// Store each json object to a json file
 // Create a search function that matches a search term
 // Create a CLI to search against the index
 
 const maxID int = 2 // 2427
 
+// IKCDComicRecord holds the data for each comic in the search database
+type IKCDComicRecord struct {
+	Num        int
+	URL        string `json:"link"`
+	Title      string
+	Transcript string
+}
+
 func main() {
 	for i := 1; i <= maxID; i++ {
-		resp, err := http.Get("https://xkcd.com/571/info.0.json")
+		url := fmt.Sprintf("%s%d%s", "https://xkcd.com/", i, "/info.0.json")
+		resp, err := http.Get(url)
 		if err != nil {
 			panic(err)
 		}
 
 		defer resp.Body.Close()
 
-		scanner := bufio.NewScanner(resp.Body)
+		var result IKCDComicRecord
 
-		fmt.Println(resp.Status)
-		for scanner.Scan() {
-			fmt.Println(scanner.Text())
-		}
-		if err := scanner.Err(); err != nil {
+		if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 			panic(err)
 		}
+
+		fmt.Printf("%v\n", result)
 	}
 }
