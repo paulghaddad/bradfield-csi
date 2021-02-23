@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 )
 
 /*
@@ -29,7 +31,17 @@ type IKCDComicRecord struct {
 	Transcript string
 }
 
-func main() {
+// BuildIndex retrieves data from the XKCD site to build a local database of
+// records
+func BuildIndex() {
+	file, err := os.Create("./records.json")
+	if err != nil {
+		panic(err)
+	}
+
+	writer := bufio.NewWriter(file)
+	dataRecords := make(map[int]map[string]string)
+
 	for i := 1; i <= maxID; i++ {
 		url := fmt.Sprintf("%s%d%s", "https://xkcd.com/", i, "/info.0.json")
 		resp, err := http.Get(url)
@@ -45,6 +57,26 @@ func main() {
 			panic(err)
 		}
 
-		fmt.Printf("%v\n", result)
+		values := make(map[string]string)
+		values["URL"] = result.URL
+		values["TItle"] = result.Title
+		values["Transcript"] = result.Transcript
+
+		dataRecords[int(result.Num)] = values
+
 	}
+
+	index, _ := json.Marshal(dataRecords)
+	fmt.Println(string(index))
+
+	_, err = writer.WriteString(string(index))
+	if err != nil {
+		panic(err)
+	}
+
+	writer.Flush()
+}
+
+func main() {
+	BuildIndex()
 }
