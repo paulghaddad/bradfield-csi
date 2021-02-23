@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"regexp"
+	"strings"
 )
 
 /*
@@ -17,9 +19,10 @@ that matches a search term provided on the command line.
 */
 
 // Tasks:
-// Store each json object to a json file
 // Create a search function that matches a search term
-// Create a CLI to search against the index
+// Create a CLI to:
+//   build the index
+//   search against the index
 
 const maxID int = 2 // 2427
 
@@ -34,13 +37,8 @@ type IKCDComicRecord struct {
 // BuildIndex retrieves data from the XKCD site to build a local database of
 // records
 func BuildIndex() {
-	file, err := os.Create("./records.json")
-	if err != nil {
-		panic(err)
-	}
-
-	writer := bufio.NewWriter(file)
 	dataRecords := make(map[int]map[string]string)
+	termsToIDs := make(map[string][]int)
 
 	for i := 1; i <= maxID; i++ {
 		url := fmt.Sprintf("%s%d%s", "https://xkcd.com/", i, "/info.0.json")
@@ -57,26 +55,82 @@ func BuildIndex() {
 			panic(err)
 		}
 
+		// Populate database records
 		values := make(map[string]string)
 		values["URL"] = result.URL
 		values["TItle"] = result.Title
 		values["Transcript"] = result.Transcript
 
-		dataRecords[int(result.Num)] = values
+		id := int(result.Num)
 
+		dataRecords[id] = values
+
+		// Build search index based on terms in the title
+		wordRegex := regexp.MustCompile("[a-zA-Z]+")
+		terms := wordRegex.FindAllString(result.Title, -1)
+
+		for _, term := range terms {
+			normTerm := strings.ToLower(term)
+			_, pres := termsToIDs[normTerm]
+
+			if pres {
+				termsToIDs[normTerm] = append(termsToIDs[normTerm], id)
+			} else {
+				termsToIDs[normTerm] = []int{id}
+			}
+		}
 	}
 
-	index, _ := json.Marshal(dataRecords)
-	fmt.Println(string(index))
+	recordsToStore, _ := json.Marshal(dataRecords)
 
-	_, err = writer.WriteString(string(index))
+	// Write database to file
+	recordsFile, err := os.Create("./records.json")
 	if err != nil {
 		panic(err)
 	}
 
-	writer.Flush()
+	recordsWriter := bufio.NewWriter(recordsFile)
+
+	_, err = recordsWriter.WriteString(string(recordsToStore))
+	if err != nil {
+		panic(err)
+	}
+
+	recordsWriter.Flush()
+
+	// Write Search Index to file
+	indexToStore, _ := json.Marshal(termsToIDs)
+
+	indexFile, err := os.Create("./index.json")
+	if err != nil {
+		panic(err)
+	}
+
+	indexWriter := bufio.NewWriter(indexFile)
+
+	_, err = indexWriter.WriteString(string(indexToStore))
+	if err != nil {
+		panic(err)
+	}
+
+	indexWriter.Flush()
 }
 
 func main() {
-	BuildIndex()
+	args := os.Args[1:]
+
+	if len(args) == 0 {
+		fmt.Println("You must provide an argument. [build / search term]")
+		return
+	}
+
+	command := args[0]
+	if command == "build" {
+		fmt.Println("Rebuilding Index")
+		BuildIndex()
+	} else if command == "search" {
+		fmt.Println("Searching")
+	} else {
+		fmt.Println("Unknown argument")
+	}
 }
