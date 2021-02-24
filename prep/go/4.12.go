@@ -30,10 +30,17 @@ type IKCDComicRecord struct {
 	Transcript string
 }
 
+// DataAttributes are the attributes returned for search results
+type DataAttributes struct {
+	URL        string
+	Title      string
+	Transcript string
+}
+
 // BuildIndex retrieves data from the XKCD site to build a local database of
 // records
 func BuildIndex() {
-	dataRecords := make(map[int]map[string]string)
+	allDataRecords := make(map[int]map[string]string)
 	termsToIDs := make(map[string][]int)
 
 	for i := 1; i <= maxID; i++ {
@@ -65,7 +72,7 @@ func BuildIndex() {
 
 		id := int(result.Num)
 
-		dataRecords[id] = values
+		allDataRecords[id] = values
 
 		// Build search index based on terms in the title
 		wordRegex := regexp.MustCompile("[a-zA-Z]+")
@@ -83,7 +90,7 @@ func BuildIndex() {
 		}
 	}
 
-	recordsToStore, _ := json.Marshal(dataRecords)
+	recordsToStore, _ := json.Marshal(allDataRecords)
 
 	// Write database to file
 	recordsFile, err := os.Create("./records.json")
@@ -125,55 +132,42 @@ type MatchResult struct {
 }
 
 // SearchIndex returns the URL and transcript of each matching XKCD record
-func SearchIndex(term string) []MatchResult {
-	// bring index into memory
+func SearchIndex(term string) []DataAttributes {
+
+	// Bring index into memory
 	indexData, err := ioutil.ReadFile("./index.json")
 	if err != nil {
 		panic(err)
 	}
 
 	indexRecords := make(map[string][]int, 0)
-
 	if err := json.Unmarshal(indexData, &indexRecords); err != nil {
 		panic(err)
 	}
 
-	// search index
+	// Search index for the ids that match the search term
 	matches, pres := indexRecords[term]
 	if !pres {
 		fmt.Println("No records found.")
-		return []MatchResult{}
+		return []DataAttributes{}
 	}
 
-	// return URL and transcript after looking up matches in database
+	// Bring datbase into memory
 	data, err := ioutil.ReadFile("./records.json")
 	if err != nil {
 		panic(err)
 	}
 
-	type dataAttributes struct {
-		URL        string
-		Title      string
-		Transcript string
-	}
-
-	var dataRecords = map[string]dataAttributes{}
-
-	if err := json.Unmarshal(data, &dataRecords); err != nil {
+	var allDataRecords = map[string]DataAttributes{}
+	if err := json.Unmarshal(data, &allDataRecords); err != nil {
 		panic(err)
 	}
 
-	// fmt.Println(dataRecords)
-
-	matchData := []MatchResult{}
-
+	// Return database records that match the search term
+	matchData := []DataAttributes{}
 	for _, id := range matches {
-		record := dataRecords[strconv.Itoa(id)]
-		attributes := MatchResult{}
-		attributes.url = record.URL
-		attributes.transcript = record.Transcript
-
-		matchData = append(matchData, attributes)
+		record := allDataRecords[strconv.Itoa(id)]
+		matchData = append(matchData, record)
 	}
 
 	return matchData
@@ -196,8 +190,9 @@ func main() {
 		searchResults := SearchIndex(os.Args[2])
 		for i, result := range searchResults {
 			fmt.Printf("\n\nResult %d:\n", i+1)
-			fmt.Printf("URL: %s\n", result.url)
-			fmt.Printf("Transcript: %s\n", result.transcript)
+			fmt.Printf("Title: %s\n", result.Title)
+			fmt.Printf("URL: %s\n", result.URL)
+			fmt.Printf("Transcript: %s\n", result.Transcript)
 		}
 	} else {
 		fmt.Println("Unknown argument")
