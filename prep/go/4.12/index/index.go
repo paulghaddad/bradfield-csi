@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"regexp"
@@ -27,7 +28,7 @@ func Build(dbFilename, indexFilename string, maxID int) {
 	termsToIDs := make(map[string][]int)
 
 	for i := 1; i <= maxID; i++ {
-		fmt.Printf("Retrieving API response for record with ID: %d\n", i)
+		log.Printf("Retrieving API response for record with ID: %d\n", i)
 
 		url := fmt.Sprintf("%s%d%s", "https://xkcd.com/", i, "/info.0.json")
 		resp, err := http.Get(url)

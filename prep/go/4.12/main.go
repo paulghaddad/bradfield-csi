@@ -9,7 +9,9 @@ that matches a search term provided on the command line.
 package main
 
 import (
+	"flag"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/bradfield-csi/prep/go/4.12/index"
@@ -20,27 +22,36 @@ const maxID int = 2427
 const dbFilename = "./data.json"
 const indexFilename = "./index.json"
 
+var n = flag.Int("n", maxID, "Max number of IDs to fetch from XKCD API")
+
 func main() {
-	args := os.Args[1:]
+	flag.Parse()
+
+	args := flag.Args()
 
 	if len(args) == 0 {
 		fmt.Println("You must provide an argument. [build / search term]")
-		return
+		os.Exit(1)
 	}
 
 	command := args[0]
-	if command == "build" {
-		fmt.Println("Rebuilding Index")
-		index.Build(dbFilename, indexFilename, maxID)
-	} else if command == "search" {
-		fmt.Println("Searching")
 
-		searchTerm := os.Args[2]
-		if len(searchTerm) == 0 {
+	if command == "build" {
+		log.Println("Rebuilding Index")
+		index.Build(dbFilename, indexFilename, *n)
+	} else if command == "search" {
+
+		// Ensure a search term is provided
+		if len(args) < 2 {
 			fmt.Println("You must provide a term to search for [search term]")
+			os.Exit(1)
 		}
 
+		fmt.Println("Searching")
+		searchTerm := os.Args[1]
 		searchResults := search.Find(dbFilename, indexFilename, searchTerm)
+
+		// Print search results TODO: Extract to function
 		for i, result := range searchResults {
 			fmt.Printf("\n\nResult %d:\n", i+1)
 			fmt.Printf("Title: %s\n", result.Title)
@@ -49,5 +60,6 @@ func main() {
 		}
 	} else {
 		fmt.Println("Unknown argument. Must be [build / search term]")
+		os.Exit(1)
 	}
 }
