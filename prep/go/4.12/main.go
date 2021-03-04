@@ -38,7 +38,13 @@ func main() {
 
 	if command == "build" {
 		log.Println("Rebuilding Index")
-		index.Build(dbFilename, indexFilename, *n)
+		err := index.Build(dbFilename, indexFilename, *n)
+
+		if err != nil {
+			fmt.Println("There was an error encountered while building the index")
+			os.Exit(1)
+		}
+
 	} else if command == "search" {
 
 		// Ensure a search term is provided
@@ -48,8 +54,13 @@ func main() {
 		}
 
 		fmt.Println("Searching")
-		searchTerm := os.Args[1]
-		searchResults := search.Find(dbFilename, indexFilename, searchTerm)
+		searchTerm := args[1]
+		searchResults, err := search.Find(dbFilename, indexFilename, searchTerm)
+
+		if err != nil {
+			fmt.Println("There was an error encountered while searching")
+			os.Exit(1)
+		}
 
 		// Print search results TODO: Extract to function
 		for i, result := range searchResults {
