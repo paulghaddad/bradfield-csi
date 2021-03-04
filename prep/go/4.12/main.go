@@ -24,6 +24,13 @@ const indexFilename = "./index.json"
 
 var n = flag.Int("n", maxID, "Max number of IDs to fetch from XKCD API")
 
+func printSearchResult(searchResult search.Result) {
+	fmt.Println("\nResult:")
+	fmt.Printf("Title: %s\n", searchResult.Title)
+	fmt.Printf("URL: %s\n", searchResult.URL)
+	fmt.Printf("Transcript: %s\n", searchResult.Transcript)
+}
+
 func main() {
 	flag.Parse()
 
@@ -62,12 +69,8 @@ func main() {
 			os.Exit(1)
 		}
 
-		// Print search results TODO: Extract to function
-		for i, result := range searchResults {
-			fmt.Printf("\n\nResult %d:\n", i+1)
-			fmt.Printf("Title: %s\n", result.Title)
-			fmt.Printf("URL: %s\n", result.URL)
-			fmt.Printf("Transcript: %s\n", result.Transcript)
+		for _, result := range searchResults {
+			printSearchResult(result)
 		}
 	} else {
 		fmt.Println("Unknown argument. Must be [build / search term]")
