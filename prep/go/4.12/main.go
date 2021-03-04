@@ -48,6 +48,7 @@ func main() {
 		err := index.Build(dbFilename, indexFilename, *n)
 
 		if err != nil {
+			fmt.Println(err)
 			fmt.Println("There was an error encountered while building the index")
 			os.Exit(1)
 		}
