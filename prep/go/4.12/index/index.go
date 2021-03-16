@@ -131,20 +131,17 @@ func Build(dbFilename, indexFilename string, maxID int) error {
 	// map of search terms to matching record ids for search index
 	termsToIDs := make(map[string][]int)
 
+	// Populate data records in memory
 	for i := 1; i <= maxID; i++ {
 		record, err := fetchAPIRecord(i)
 		if err != nil {
 			continue
 		}
 
-		// Populate data records in memory
-
-		id := int(i)
-
-		apiRecords[id] = record
+		apiRecords[int(i)] = record
 
 		// Build search index based on individual words in the title
-		mapTermsToResults(termsToIDs, id, record["Title"])
+		mapTermsToResults(termsToIDs, int(i), record["Title"])
 	}
 
 	// Create Database File

@@ -18,9 +18,11 @@ import (
 	"github.com/bradfield-csi/prep/go/4.12/search"
 )
 
-const maxID int = 2427
-const dbFilename = "./data.json"
-const indexFilename = "./index.json"
+const (
+	maxID         int = 2427
+	dbFilename        = "./data.json"
+	indexFilename     = "./index.json"
+)
 
 var n = flag.Int("n", maxID, "Max number of IDs to fetch from XKCD API")
 
